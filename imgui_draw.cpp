@@ -573,6 +573,10 @@ void ImDrawList::_OnChangedClipRect()
     curr_cmd->ClipRect = _CmdHeader.ClipRect;
 }
 
+// Operators for easy compare
+static inline bool operator==(const ImTextureID& lhs, const ImTextureID& rhs) { return lhs._TexUserID == rhs._TexUserID && lhs._Atlas == rhs._Atlas; }
+static inline bool operator!=(const ImTextureID& lhs, const ImTextureID& rhs) { return lhs._TexUserID != rhs._TexUserID || lhs._Atlas != rhs._Atlas; }
+
 void ImDrawList::_OnChangedTextureID()
 {
     // If current command is used with different settings we need to add a new command
@@ -663,7 +667,7 @@ void ImDrawList::PushTextureID(ImTextureID texture_id)
 void ImDrawList::PopTextureID()
 {
     _TextureIdStack.pop_back();
-    _CmdHeader.TextureId = (_TextureIdStack.Size == 0) ? (ImTextureID)NULL : _TextureIdStack.Data[_TextureIdStack.Size - 1];
+    _CmdHeader.TextureId = (_TextureIdStack.Size == 0) ? ImTextureID() : _TextureIdStack.Data[_TextureIdStack.Size - 1];
     _OnChangedTextureID();
 }
 
@@ -1686,7 +1690,7 @@ void ImDrawList::AddText(ImFont* font, float font_size, const ImVec2& pos, ImU32
     if (font_size == 0.0f)
         font_size = _Data->FontSize;
 
-    IM_ASSERT(font->ContainerAtlas->TexID == _CmdHeader.TextureId);  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
+    IM_ASSERT(font->ContainerAtlas->TexID == _CmdHeader.TextureId); // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
     ImVec4 clip_rect = _CmdHeader.ClipRect;
     if (cpu_fine_clip_rect)
@@ -2483,6 +2487,7 @@ ImFontAtlas::ImFontAtlas()
 {
     memset(this, 0, sizeof(*this));
     TexGlyphPadding = 1;
+    TexID._Atlas = this;
     PackIdMouseCursors = PackIdLines = -1;
 }
 
@@ -2882,7 +2887,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     ImFontAtlasBuildInit(atlas);
 
     // Clear atlas
-    atlas->TexID = (ImTextureID)NULL;
+    atlas->TexID._TexUserID = 0;
     atlas->TexWidth = atlas->TexHeight = 0;
     atlas->TexUvScale = ImVec2(0.0f, 0.0f);
     atlas->TexUvWhitePixel = ImVec2(0.0f, 0.0f);

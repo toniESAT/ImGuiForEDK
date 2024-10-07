@@ -1068,7 +1068,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     return held;
 }
 
-// - Read about ImTextureID here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
+// - Read about ImTextureID/ImTextureUserID here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
 // - 'uv0' and 'uv1' are texture coordinates. Read about them from the same link above.
 void ImGui::ImageWithBg(ImTextureID user_texture_id, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& bg_col, const ImVec4& tint_col)
 {

@@ -21095,8 +21095,8 @@ void ImGui::UpdateDebugToolFlashStyleColor()
 static const char* FormatTextureIDForDebugDisplay(char* buf, int buf_size, ImTextureID tex_id)
 {
     union { void* ptr; int integer; } tex_id_opaque;
-    memcpy(&tex_id_opaque, &tex_id, ImMin(sizeof(void*), sizeof(tex_id)));
-    if (sizeof(tex_id) >= sizeof(void*))
+    memcpy(&tex_id_opaque, &tex_id._TexUserID, ImMin(sizeof(void*), sizeof(tex_id._TexUserID)));
+    if (sizeof(tex_id._TexUserID) >= sizeof(void*))
         ImFormatString(buf, buf_size, "0x%p", tex_id_opaque.ptr);
     else
         ImFormatString(buf, buf_size, "0x%04X", tex_id_opaque.integer);

@@ -1791,18 +1791,18 @@ static void DemoWindowWidgetsImages()
         ImGuiIO& io = ImGui::GetIO();
         ImGui::TextWrapped(
             "Below we are displaying the font texture (which is the only texture we have access to in this demo). "
-            "Use the 'ImTextureID' type as storage to pass pointers or identifier to your own texture data. "
+            "Use the 'ImTextureUserID' type as storage to pass pointers or identifier to your own texture data. "
             "Hover the texture for a zoomed view!");
 
         // Below we are displaying the font texture because it is the only texture we have access to inside the demo!
-        // Remember that ImTextureID is just storage for whatever you want it to be. It is essentially a value that
+        // Remember that ImTextureUserID is just storage for whatever you want it to be. It is essentially a value that
         // will be passed to the rendering backend via the ImDrawCmd structure.
         // If you use one of the default imgui_impl_XXXX.cpp rendering backend, they all have comments at the top
-        // of their respective source file to specify what they expect to be stored in ImTextureID, for example:
+        // of their respective source file to specify what they expect to be stored in ImTextureUserID, for example:
         // - The imgui_impl_dx11.cpp renderer expect a 'ID3D11ShaderResourceView*' pointer
         // - The imgui_impl_opengl3.cpp renderer expect a GLuint OpenGL texture identifier, etc.
         // More:
-        // - If you decided that ImTextureID = MyEngineTexture*, then you can pass your MyEngineTexture* pointers
+        // - If you decided that ImTextureUserID = MyEngineTexture*, then you can pass your MyEngineTexture* pointers
         //   to ImGui::Image(), and gather width/height through your own functions, etc.
         // - You can use ShowMetricsWindow() to inspect the draw data that are being passed to your renderer,
         //   it will help you debug issues if you are confused about it.

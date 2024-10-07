@@ -255,14 +255,37 @@ typedef int ImGuiTreeNodeFlags;     // -> enum ImGuiTreeNodeFlags_   // Flags: f
 typedef int ImGuiViewportFlags;     // -> enum ImGuiViewportFlags_   // Flags: for ImGuiViewport
 typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: for Begin(), BeginChild()
 
-// ImTexture: user data for renderer backend to identify a texture [Compile-time configurable type]
+// ImTextureUserID: user data for renderer backend to identify a texture [Compile-time configurable type]
 // - To use something else than an opaque void* pointer: override with e.g. '#define ImTextureID MyTextureType*' in your imconfig.h file.
 // - This can be whatever to you want it to be! read the FAQ about ImTextureID for details.
 // - You can make this a structure with various constructors if you need. You will have to implement ==/!= operators.
 // - (note: before v1.91.4 (2024/10/08) the default type for ImTextureID was void*. Use intermediary intptr_t cast and read FAQ if you have casting warnings)
-#ifndef ImTextureID
-typedef ImU64 ImTextureID;          // Default: store a pointer or an integer fitting in a pointer (most renderer backends are ok with that)
+// - (note: before v1.92.0 (2025/XX/XX) ImTextureUserID was called ImTextureID)
+#ifdef ImTextureID
+#error Change '#define ImTextureID xxxx' to '#define ImTextureUserID xxxx'!
 #endif
+#ifndef ImTextureUserID
+typedef ImU64 ImTextureUserID; // Default: store a pointer or an integer fitting in a pointer (most renderer backends are ok with that)
+#endif
+
+// ImTextureID contains:
+// -    a ImTextureUserID value (user/backend identifier), typically when created by user code to load images.
+// - OR a texture/atlas pointer, typically when created by Dear ImGui itself.
+// There is no constructor to create a ImTextureID from a ImTextureData* as we don't expect this to be useful to the end-user.
+// If you wrap the library from another language than C++: the functions taking ImTextureID would directly better take ImTextureUserID in your language binding.
+struct ImTextureID
+{
+    ImTextureID()                               { memset(this, 0, sizeof(*this)); }
+    ImTextureID(ImTextureUserID tex_user_id)    { memset(this, 0, sizeof(*this)); _TexUserID = tex_user_id; }
+#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    ImTextureID(void* tex_user_id)              { memset(this, 0, sizeof(*this)); _TexUserID = (ImTextureUserID)(size_t)tex_user_id; } // For legacy backends casting to ImTextureID
+    //inline operator intptr_t() const          { return (intptr_t)_TexUserID; }                                                       // For legacy backends casting to ImTextureID
+#endif
+
+    // Members
+    ImTextureUserID     _TexUserID;             // Underlying user/backend texture identifier, or zero if not yet uploaded.
+    ImFontAtlas*        _Atlas;                 // Texture/Atlas pointer
+};
 
 // ImDrawIdx: vertex index. [Compile-time configurable type]
 // - To use 16-bit indices + allow large meshes: backend need to set 'io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset' and handle ImDrawCmd::VtxOffset (recommended).
@@ -3097,7 +3120,7 @@ typedef void (*ImDrawCallback)(const ImDrawList* parent_list, const ImDrawCmd* c
 struct ImDrawCmd
 {
     ImVec4          ClipRect;           // 4*4  // Clipping rectangle (x1, y1, x2, y2). Subtract ImDrawData->DisplayPos to get clipping rectangle in "viewport" coordinates
-    ImTextureID     TextureId;          // 4-8  // User-provided texture ID. Set by user in ImfontAtlas::SetTexID() for fonts or passed to Image*() functions. Ignore if never using images or multiple fonts atlas.
+    ImTextureID     TextureId;          // 16   // User-provided texture ID. Set by user in ImFontAtlas::SetTexID() for fonts or passed to Image*() functions. Ignore if never using images or multiple fonts atlas.
     unsigned int    VtxOffset;          // 4    // Start offset in vertex buffer. ImGuiBackendFlags_RendererHasVtxOffset: always 0, otherwise may be >0 to support meshes larger than 64K vertices with 16-bit indices.
     unsigned int    IdxOffset;          // 4    // Start offset in index buffer.
     unsigned int    ElemCount;          // 4    // Number of indices (multiple of 3) to be rendered as triangles. Vertices are stored in the callee ImDrawList's vtx_buffer[] array, indices in idx_buffer[].
@@ -3108,8 +3131,8 @@ struct ImDrawCmd
 
     ImDrawCmd()     { memset(this, 0, sizeof(*this)); } // Also ensure our padding fields are zeroed
 
-    // Since 1.83: returns ImTextureID associated with this draw call. Warning: DO NOT assume this is always same as 'TextureId' (we will change this function for an upcoming feature)
-    inline ImTextureID GetTexID() const { return TextureId; }
+    // Since 1.83: returns ImTextureUserID associated with this draw call. Warning: DO NOT assume this is always same as 'TextureId' (we will change this function for an upcoming feature)
+    inline ImTextureUserID GetTexID() const { return TextureId._TexUserID; }
 };
 
 // Vertex layout
@@ -3501,7 +3524,11 @@ struct ImFontAtlas
     IMGUI_API void              GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 1 byte per-pixel
     IMGUI_API void              GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel = NULL);  // 4 bytes-per-pixel
     bool                        IsBuilt() const             { return Fonts.Size > 0 && TexReady; } // Bit ambiguous: used to detect when user didn't build texture but effectively we should check TexID != 0 except that would be backend dependent...
-    void                        SetTexID(ImTextureID id)    { TexID = id; }
+#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    void                        SetTexID(ImTextureUserID id){ TexID._Atlas = this; TexID._TexUserID = id; } // FIXME-NEWATLAS: Called by legacy backends.
+    void                        SetTexID(ImTextureID id)    { TexID = id; }                                 // FIXME-NEWATLAS: Called by legacy backends.
+#endif
+
 
     //-------------------------------------------
     // Glyph Ranges
