@@ -622,6 +622,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
             ImGui::CheckboxFlags("io.BackendFlags: PlatformHasViewports",   &io.BackendFlags, ImGuiBackendFlags_PlatformHasViewports);
             ImGui::CheckboxFlags("io.BackendFlags: HasMouseHoveredViewport",&io.BackendFlags, ImGuiBackendFlags_HasMouseHoveredViewport);
             ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &io.BackendFlags, ImGuiBackendFlags_RendererHasVtxOffset);
+            ImGui::CheckboxFlags("io.BackendFlags: RendererHasTextures",    &io.BackendFlags, ImGuiBackendFlags_RendererHasTextures);
             ImGui::CheckboxFlags("io.BackendFlags: RendererHasViewports",   &io.BackendFlags, ImGuiBackendFlags_RendererHasViewports);
             ImGui::EndDisabled();
 
@@ -1809,16 +1810,16 @@ static void DemoWindowWidgetsImages()
         // - Consider using the lower-level ImDrawList::AddImage() API, via ImGui::GetWindowDrawList()->AddImage().
         // - Read https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
         // - Read https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
-        ImTextureID my_tex_id = io.Fonts->TexID;
-        float my_tex_w = (float)io.Fonts->TexWidth;
-        float my_tex_h = (float)io.Fonts->TexHeight;
+        ImTextureData* tex = io.Fonts->TexData;
+        float my_tex_w = (float)tex->Width;
+        float my_tex_h = (float)tex->Height;
         {
             ImGui::Text("%.0fx%.0f", my_tex_w, my_tex_h);
             ImVec2 pos = ImGui::GetCursorScreenPos();
             ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
             ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
             ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, IM_MAX(1.0f, ImGui::GetStyle().ImageBorderSize));
-            ImGui::ImageWithBg(my_tex_id, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+            ImGui::ImageWithBg(tex->GetTexID(), ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
             if (ImGui::BeginItemTooltip())
             {
                 float region_sz = 32.0f;
@@ -1833,7 +1834,7 @@ static void DemoWindowWidgetsImages()
                 ImGui::Text("Max: (%.2f, %.2f)", region_x + region_sz, region_y + region_sz);
                 ImVec2 uv0 = ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h);
                 ImVec2 uv1 = ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
-                ImGui::ImageWithBg(my_tex_id, ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                ImGui::ImageWithBg(tex->GetTexID(), ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                 ImGui::EndTooltip();
             }
             ImGui::PopStyleVar();
@@ -1855,7 +1856,7 @@ static void DemoWindowWidgetsImages()
             ImVec2 uv1 = ImVec2(32.0f / my_tex_w, 32.0f / my_tex_h);    // UV coordinates for (32,32) in our texture
             ImVec4 bg_col = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);             // Black background
             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);           // No tint
-            if (ImGui::ImageButton("", my_tex_id, size, uv0, uv1, bg_col, tint_col))
+            if (ImGui::ImageButton("", tex->GetTexID(), size, uv0, uv1, bg_col, tint_col))
                 pressed_count += 1;
             if (i > 0)
                 ImGui::PopStyleVar();
@@ -8038,7 +8039,7 @@ void ImGui::ShowAboutWindow(bool* p_open)
         if (copy_to_clipboard)
         {
             ImGui::LogToClipboard();
-            ImGui::LogText("```\n"); // Back quotes will make text appears without formatting when pasting on GitHub
+            ImGui::LogText("```cpp\n"); // Back quotes will make text appears without formatting when pasting on GitHub
         }
 
         ImGui::Text("Dear ImGui %s (%d)", IMGUI_VERSION, IMGUI_VERSION_NUM);
@@ -8154,9 +8155,11 @@ void ImGui::ShowAboutWindow(bool* p_open)
         if (io.BackendFlags & ImGuiBackendFlags_PlatformHasViewports)   ImGui::Text(" PlatformHasViewports");
         if (io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)ImGui::Text(" HasMouseHoveredViewport");
         if (io.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset)   ImGui::Text(" RendererHasVtxOffset");
+        if (io.BackendFlags & ImGuiBackendFlags_RendererHasTextures)    ImGui::Text(" RendererHasTextures");
         if (io.BackendFlags & ImGuiBackendFlags_RendererHasViewports)   ImGui::Text(" RendererHasViewports");
         ImGui::Separator();
-        ImGui::Text("io.Fonts: %d fonts, Flags: 0x%08X, TexSize: %d,%d", io.Fonts->Fonts.Size, io.Fonts->Flags, io.Fonts->TexWidth, io.Fonts->TexHeight);
+        ImGui::Text("io.Fonts: %d fonts, Flags: 0x%08X, TexSize: %d,%d", io.Fonts->Fonts.Size, io.Fonts->Flags, io.Fonts->TexData->Width, io.Fonts->TexData->Height);
+        ImGui::Text("io.Fonts->FontBackendName: \"%s\"", io.Fonts->FontBackendName ? io.Fonts->FontBackendName : "NULL");
         ImGui::Text("io.DisplaySize: %.2f,%.2f", io.DisplaySize.x, io.DisplaySize.y);
         ImGui::Text("io.DisplayFramebufferScale: %.2f,%.2f", io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
         ImGui::Separator();
