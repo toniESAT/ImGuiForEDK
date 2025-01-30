@@ -262,16 +262,23 @@ typedef int ImGuiViewportFlags;     // -> enum ImGuiViewportFlags_   // Flags: f
 typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: for Begin(), BeginChild()
 
 // ImTextureUserID: user data for renderer backend to identify a texture [Compile-time configurable type]
-// - To use something else than an opaque void* pointer: override with e.g. '#define ImTextureID MyTextureType*' in your imconfig.h file.
-// - This can be whatever to you want it to be! read the FAQ about ImTextureID for details.
-// - You can make this a structure with various constructors if you need. You will have to implement ==/!= operators.
-// - (note: before v1.91.4 (2024/10/08) the default type for ImTextureID was void*. Use intermediary intptr_t cast and read FAQ if you have casting warnings)
-// - (note: before v1.92.0 (2025/XX/XX) ImTextureUserID was called ImTextureID)
+// Overview:
+// - Backend and user/app code provides ImTextureUserID values that gets stored inside draw commands (ImDrawCmd) during the ImGui frame.
+// - Backend uses ImDrawCmd::GetTexID() to retrieve the ImTextureUserID value during rendering. Then, they can bind the textures of each draw command.
+// Configuring the type:
+// - To use something else than a 64-bit value: override with e.g. '#define ImTextureUserID MyTextureType*' in your imconfig.h file.
+// - This can be whatever to you want it to be! read the FAQ entry about textures for details.
+// - You may decide to store a higher-level structure containing texture, sampler, shader etc. with various constructors if you like. You will need to implement ==/!= operators.
+// History:
+// - In v1.91.4 (2024/10/08): the default type for ImTextureID was changed from 'void*' to 'ImU64'. This allowed backends requirig 64-bit worth of data to build on 32-bit architectures. Use intermediary intptr_t cast and read FAQ if you have casting warnings.
+// - In v1.92.0 (2025/XX/XX): ImTextureID was renamed to ImTextureUserID. ImTextureID still exist but isn't user-defined.
+// - If you have a pre-1.92 custom backend: you can also change ImTextureID to ImTextureUserID for consistency. We allow ImTextureID to be constructed from ImTextureUserID for convenience.
+// - ImDrawCmd::GetTexID() previously returned ImTextureID, it now returns ImTextureUserID. It may be transparent to some. This was designed to maximize syntax compatiblity with old backends.
 #ifdef ImTextureID
 #error Change '#define ImTextureID xxxx' to '#define ImTextureUserID xxxx'!
 #endif
 #ifndef ImTextureUserID
-typedef ImU64 ImTextureUserID;      // Default: store a pointer or an integer fitting in a pointer (most renderer backends are ok with that)
+typedef ImU64 ImTextureUserID;      // Default: store up to 64-bits (any pointer or integer). A majority of backends are ok with that.
 #endif
 // Define this to another value if you need value of 0 to be valid.
 #ifndef ImTextureUserID_Invalid
@@ -285,11 +292,11 @@ typedef ImU64 ImTextureUserID;      // Default: store a pointer or an integer fi
 // If you wrap the library from another language than C++: the functions taking ImTextureID would directly better take ImTextureUserID in your language binding.
 struct ImTextureID
 {
-    ImTextureID()                               { memset(this, 0, sizeof(*this)); }
-    ImTextureID(ImTextureUserID tex_user_id)    { memset(this, 0, sizeof(*this)); _TexUserID = tex_user_id; }
+    ImTextureID()                            { memset(this, 0, sizeof(*this)); }
+    ImTextureID(ImTextureUserID tex_user_id) { memset(this, 0, sizeof(*this)); _TexUserID = tex_user_id; }
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    ImTextureID(void* tex_user_id)              { memset(this, 0, sizeof(*this)); _TexUserID = (ImTextureUserID)(size_t)tex_user_id; } // For legacy backends casting to ImTextureID
-    //inline operator intptr_t() const          { return (intptr_t)_TexUserID; }                                                       // For legacy backends casting to ImTextureID
+    ImTextureID(void* tex_user_id)           { memset(this, 0, sizeof(*this)); _TexUserID = (ImTextureUserID)(size_t)tex_user_id; } // For legacy backends casting to ImTextureID
+    //inline operator intptr_t() const       { return (intptr_t)_TexUserID; }                                                       // For legacy backends casting to ImTextureID
 #endif
 
     // Members
