@@ -4276,12 +4276,14 @@ void ImGui::Shutdown()
     IM_ASSERT_USER_ERROR(g.IO.BackendRendererUserData == NULL, "Forgot to shutdown Renderer backend?");
 
     // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
-    if (g.IO.Fonts)
-        ImFontAtlasRemoveDrawListSharedData(g.IO.Fonts, &g.DrawListSharedData);
-    if (g.IO.Fonts && g.FontAtlasOwnedByContext)
+    if (ImFontAtlas* atlas = g.IO.Fonts)
     {
-        g.IO.Fonts->Locked = false;
-        IM_DELETE(g.IO.Fonts);
+        ImFontAtlasRemoveDrawListSharedData(atlas, &g.DrawListSharedData);
+        if (g.FontAtlasOwnedByContext)
+        {
+            atlas->Locked = false;
+            IM_DELETE(g.IO.Fonts);
+        }
     }
     g.IO.Fonts = NULL;
     g.DrawListSharedData.TempBuffer.clear();
@@ -5423,8 +5425,9 @@ void ImGui::NewFrame()
     UpdateTexturesNewFrame();
 
     // Setup current font and draw list shared data
+    ImFontAtlas* atlas = g.IO.Fonts;
     if ((g.IO.BackendFlags & ImGuiBackendFlags_RendererHasTextures) == 0)
-        g.IO.Fonts->Locked = true;
+        atlas->Locked = true;
     SetupDrawListSharedData();
     SetCurrentFont(GetDefaultFont(), GetDefaultFont()->Sources[0].SizePixels);
     IM_ASSERT(g.Font->IsLoaded());
@@ -5997,7 +6000,8 @@ void ImGui::EndFrame()
     UpdateTexturesEndFrame();
 
     // Unlock font atlas
-    g.IO.Fonts->Locked = false;
+    ImFontAtlas* atlas = g.IO.Fonts;
+    atlas->Locked = false;
 
     // Clear Input data for next frame
     g.IO.MousePosPrev = g.IO.MousePos;
