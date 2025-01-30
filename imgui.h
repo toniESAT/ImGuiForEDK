@@ -270,7 +270,11 @@ typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: f
 #error Change '#define ImTextureID xxxx' to '#define ImTextureUserID xxxx'!
 #endif
 #ifndef ImTextureUserID
-typedef ImU64 ImTextureUserID; // Default: store a pointer or an integer fitting in a pointer (most renderer backends are ok with that)
+typedef ImU64 ImTextureUserID;      // Default: store a pointer or an integer fitting in a pointer (most renderer backends are ok with that)
+#endif
+// Define this to another value if you need value of 0 to be valid.
+#ifndef ImTextureUserID_Invalid
+#define ImTextureUserID_Invalid     ((ImTextureUserID)0)
 #endif
 
 // ImTextureID contains:
@@ -3461,14 +3465,12 @@ struct IMGUI_API ImTextureData
     int                 BytesPerPixel;          // 4 or 1
     int                 UniqueID;               // Sequential index to facilitate identifying a texture when debugging/printing. Only unique per atlas.
     unsigned char*      Pixels;                 // Pointer to buffer holding 'Width*Height' pixels and 'Width*Height*BytesPerPixels' bytes.
-    ImTextureUserID     TexUserID;              // Identifier stored in ImDrawCmd::GetTexID() and passed to backend RenderDrawData loop.
+    ImTextureUserID     TexUserID;              // (always use SetTexUserID() to modify): Identifier stored in ImDrawCmd::GetTexID() and passed to backend RenderDrawData loop.
     void*               BackendUserData;        // Convenience storage for backend. Some backends may have enough with TexUserID.
     ImTextureRect       UpdateRect;             // Bounding box encompassing all individual updates.
     ImVector<ImTextureRect> Updates;            // Array of individual updates.
     int                 UnusedFrames;           // In order to facilitate handling Status==WantDestroy in some backend: this is a count successive frames where the texture was not used.
-
-    // [Internal]
-    bool                UseColors;              // [Internal] Tell whether our texture data is known to use colors (rather than just white + alpha).
+    bool                UseColors;              // Tell whether our texture data is known to use colors (rather than just white + alpha).
     bool                WantDestroyNextFrame;   // [Internal] Queued to set ImTextureStatus_WantDestroy next frame. May still be used in the current frame.
 
     // Functions
@@ -3482,6 +3484,7 @@ struct IMGUI_API ImTextureData
     int                 GetPitch() const            { return Width * BytesPerPixel; }
     ImTextureID         GetTexID() const            { ImTextureID tex_id; tex_id._TexData = (ImTextureData*)(void*)this; tex_id._TexUserID = TexUserID; return tex_id; }
     ImTextureUserID     GetTexUserID() const        { return TexUserID; }
+    void                SetTexUserID(ImTextureUserID tex_user_id) { TexUserID = tex_user_id; } // Called by the Renderer backend after creating or destroying the texture. Never modify TexUserID directly!
 };
 
 //-----------------------------------------------------------------------------
@@ -3779,7 +3782,7 @@ inline ImTextureUserID ImDrawCmd::GetTexUserID() const
 {
     ImTextureUserID tex_id = TextureId._TexData ? TextureId._TexData->TexUserID : TextureId._TexUserID;
     if (TextureId._TexData != NULL)
-        IM_ASSERT(tex_id && "ImDrawCmd is referring to Atlas texture that wasn't uploaded to graphics system.");
+        IM_ASSERT(tex_id != ImTextureUserID_Invalid && "ImDrawCmd is referring to ImTextureData that wasn't uploaded to graphics system. Backend must call ImTextureData::SetTexUserID()!");
     return tex_id;
 }
 
