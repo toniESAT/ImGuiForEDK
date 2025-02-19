@@ -3481,7 +3481,8 @@ struct IMGUI_API ImTextureData
     unsigned char*      Pixels;                 // Pointer to buffer holding 'Width*Height' pixels and 'Width*Height*BytesPerPixels' bytes.
     ImTextureUserID     TexUserID;              // (always use SetTexUserID() to modify): Identifier stored in ImDrawCmd::GetTexID() and passed to backend RenderDrawData loop.
     void*               BackendUserData;        // Convenience storage for backend. Some backends may have enough with TexUserID.
-    ImTextureRect       UpdateRect;             // Bounding box encompassing all individual updates.
+    ImTextureRect       UsedRect;               // Bounding box encompassing all past and queued Updates[].
+    ImTextureRect       UpdateRect;             // Bounding box encompassing all queued Updates[].
     ImVector<ImTextureRect> Updates;            // Array of individual updates.
     int                 UnusedFrames;           // In order to facilitate handling Status==WantDestroy in some backend: this is a count successive frames where the texture was not used.
     bool                UseColors;              // Tell whether our texture data is known to use colors (rather than just white + alpha).
