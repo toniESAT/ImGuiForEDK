@@ -287,11 +287,11 @@ jobs:
         EOF
         g++ -I. -std=c++11 -Wall -Wformat -o example_single_file example_single_file.cpp
 
-    - name: Build example_null (with large ImDrawIdx + pointer ImTextureID)
+    - name: Build example_null (with large ImDrawIdx + pointer ImTextureUserID)
       run: |
         cat > example_single_file.cpp <<'EOF'
 
-        #define ImTextureID void*
+        #define ImTextureUserID void*
         #define ImDrawIdx unsigned int
         #define IMGUI_IMPLEMENTATION
         #include "misc/single_file/imgui_single_file.h"

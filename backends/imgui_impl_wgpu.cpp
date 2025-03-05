@@ -493,7 +493,7 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
             else
             {
                 // Bind custom texture
-                ImTextureID tex_id = pcmd->GetTexID();
+                ImTextureUserID tex_id = pcmd->GetTexUserID();
                 ImGuiID tex_id_hash = ImHashData(&tex_id, sizeof(tex_id), 0);
                 WGPUBindGroup bind_group = (WGPUBindGroup)bd->renderResources.ImageBindGroups.GetVoidPtr(tex_id_hash);
                 if (!bind_group)

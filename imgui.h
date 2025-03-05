@@ -277,6 +277,7 @@ typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: f
 // - ImDrawCmd::GetTexID() previously returned ImTextureID, it now returns ImTextureUserID. It may be transparent to some. This was designed to maximize syntax compatiblity with old backends.
 #ifdef ImTextureID
 #error Change '#define ImTextureID xxxx' to '#define ImTextureUserID xxxx'!
+#undef ImTextureID
 #endif
 #ifndef ImTextureUserID
 typedef ImU64 ImTextureUserID;      // Default: store up to 64-bits (any pointer or integer). A majority of backends are ok with that.
@@ -295,7 +296,7 @@ struct ImTextureID
 {
     ImTextureID()                            { memset(this, 0, sizeof(*this)); }
     ImTextureID(ImTextureUserID tex_user_id) { memset(this, 0, sizeof(*this)); _TexUserID = tex_user_id; }
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+#if !defined(IMGUI_DISABLE_OBSOLETE_FUNCTIONS) && !defined(ImTextureUserID)
     ImTextureID(void* tex_user_id)           { memset(this, 0, sizeof(*this)); _TexUserID = (ImTextureUserID)(size_t)tex_user_id; } // For legacy backends casting to ImTextureID
     //inline operator intptr_t() const       { return (intptr_t)_TexUserID; }                                                       // For legacy backends casting to ImTextureID
 #endif
@@ -3497,7 +3498,7 @@ struct IMGUI_API ImTextureData
     unsigned char*      GetPixelsAt(int x, int y)   { IM_ASSERT(Pixels != NULL); return Pixels + (x + y * Width) * BytesPerPixel; }
     int                 GetSizeInBytes() const      { return Width * Height * BytesPerPixel; }
     int                 GetPitch() const            { return Width * BytesPerPixel; }
-    ImTextureID         GetTexID() const            { ImTextureID tex_id; tex_id._TexData = (ImTextureData*)(void*)this; tex_id._TexUserID = TexUserID; return tex_id; }
+    ImTextureID         GetTexID()                  { ImTextureID tex_id; tex_id._TexData = this; tex_id._TexUserID = TexUserID; return tex_id; }
     ImTextureUserID     GetTexUserID() const        { return TexUserID; }
     void                SetTexUserID(ImTextureUserID tex_user_id) { TexUserID = tex_user_id; } // Called by the Renderer backend after creating or destroying the texture. Never modify TexUserID directly!
 };
