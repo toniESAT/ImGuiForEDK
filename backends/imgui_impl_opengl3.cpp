@@ -1020,10 +1020,11 @@ void    ImGui_ImplOpenGL3_DestroyDeviceObjects()
 
     // Destroy all textures
     for (ImTextureData* tex : ImGui::GetPlatformIO().Textures)
-    {
-        tex->Status = ImTextureStatus_WantDestroy;
-        ImGui_ImplOpenGL3_UpdateTexture(tex);
-    }
+        if (tex->RefCount == 1)
+        {
+            tex->Status = ImTextureStatus_WantDestroy;
+            ImGui_ImplOpenGL3_UpdateTexture(tex);
+        }
 }
 
 //--------------------------------------------------------------------------------------------------------

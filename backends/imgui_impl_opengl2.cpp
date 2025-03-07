@@ -337,10 +337,11 @@ bool    ImGui_ImplOpenGL2_CreateDeviceObjects()
 void    ImGui_ImplOpenGL2_DestroyDeviceObjects()
 {
     for (ImTextureData* tex : ImGui::GetPlatformIO().Textures)
-    {
-        tex->Status = ImTextureStatus_WantDestroy;
-        ImGui_ImplOpenGL2_UpdateTexture(tex);
-    }
+        if (tex->RefCount == 1)
+        {
+            tex->Status = ImTextureStatus_WantDestroy;
+            ImGui_ImplOpenGL2_UpdateTexture(tex);
+        }
 }
 
 //--------------------------------------------------------------------------------------------------------

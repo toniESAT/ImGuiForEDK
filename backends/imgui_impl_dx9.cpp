@@ -467,10 +467,11 @@ void ImGui_ImplDX9_InvalidateDeviceObjects()
 
     // Destroy all textures
     for (ImTextureData* tex : ImGui::GetPlatformIO().Textures)
-    {
-        tex->Status = ImTextureStatus_WantDestroy;
-        ImGui_ImplDX9_UpdateTexture(tex);
-    }
+        if (tex->RefCount == 1)
+        {
+            tex->Status = ImTextureStatus_WantDestroy;
+            ImGui_ImplDX9_UpdateTexture(tex);
+        }
     if (bd->pVB) { bd->pVB->Release(); bd->pVB = nullptr; }
     if (bd->pIB) { bd->pIB->Release(); bd->pIB = nullptr; }
     ImGui_ImplDX9_InvalidateDeviceObjectsForPlatformWindows();

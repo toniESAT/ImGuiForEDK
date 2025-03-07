@@ -297,10 +297,11 @@ void ImGui_ImplSDLRenderer3_DestroyDeviceObjects()
 {
     // Destroy all textures
     for (ImTextureData* tex : ImGui::GetPlatformIO().Textures)
-    {
-        tex->Status = ImTextureStatus_WantDestroy;
-        ImGui_ImplSDLRenderer3_UpdateTexture(tex);
-    }
+        if (tex->RefCount == 1)
+        {
+            tex->Status = ImTextureStatus_WantDestroy;
+            ImGui_ImplSDLRenderer3_UpdateTexture(tex);
+        }
 }
 
 //-----------------------------------------------------------------------------

@@ -431,7 +431,8 @@ void ImGui_ImplMetal_DestroyDeviceObjects()
 
     // Destroy all textures
     for (ImTextureData* tex : ImGui::GetPlatformIO().Textures)
-        ImGui_ImplMetal_DestroyTexture(tex);
+        if (tex->RefCount == 1)
+            ImGui_ImplMetal_DestroyTexture(tex);
 
     ImGui_ImplMetal_InvalidateDeviceObjectsForPlatformWindows();
     [bd->SharedMetalContext.renderPipelineStateCache removeAllObjects];

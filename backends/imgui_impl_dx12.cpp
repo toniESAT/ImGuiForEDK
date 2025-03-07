@@ -865,7 +865,8 @@ void    ImGui_ImplDX12_InvalidateDeviceObjects()
 
     // Destroy all textures
     for (ImTextureData* tex : ImGui::GetPlatformIO().Textures)
-        ImGui_ImplDX12_DestroyTexture(tex);
+        if (tex->RefCount == 1)
+            ImGui_ImplDX12_DestroyTexture(tex);
 }
 
 bool ImGui_ImplDX12_Init(ImGui_ImplDX12_InitInfo* init_info)

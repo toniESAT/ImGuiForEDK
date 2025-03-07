@@ -3997,6 +3997,7 @@ ImGuiContext::ImGuiContext(ImFontAtlas* shared_font_atlas)
     FontBaked = NULL;
     FontSize = FontSizeBeforeScaling = FontScale = CurrentDpiScale = 0.0f;
     IO.Fonts = shared_font_atlas ? shared_font_atlas : IM_NEW(ImFontAtlas)();
+    IO.Fonts->RefCount++;
     Time = 0.0f;
     FrameCount = 0;
     FrameCountEnded = FrameCountPlatformEnded = FrameCountRendered = -1;
@@ -4285,10 +4286,11 @@ void ImGui::Shutdown()
     if (ImFontAtlas* atlas = g.IO.Fonts)
     {
         ImFontAtlasRemoveDrawListSharedData(atlas, &g.DrawListSharedData);
+        atlas->RefCount--;
         if (g.FontAtlasOwnedByContext)
         {
             atlas->Locked = false;
-            IM_DELETE(g.IO.Fonts);
+            IM_DELETE(atlas);
         }
     }
     g.IO.Fonts = NULL;
@@ -5358,7 +5360,12 @@ static void ImGui::UpdateTexturesEndFrame()
     g.PlatformIO.Textures.resize(0);
     g.PlatformIO.Textures.reserve(atlas->TexList.Size);
     for (ImTextureData* tex : atlas->TexList)
+    {
+        // We provide this information so backends can decide whether to destroy textures.
+        // This means in practice that if N imgui contexts are created with a shared atlas, we assume all of them have a backend initialized.
+        tex->RefCount = (unsigned short)atlas->RefCount;
         g.PlatformIO.Textures.push_back(tex);
+    }
 }
 
 // Called once a frame. Followed by SetCurrentFont() which sets up the remaining data.

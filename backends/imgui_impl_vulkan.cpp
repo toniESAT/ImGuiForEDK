@@ -1131,7 +1131,8 @@ void    ImGui_ImplVulkan_DestroyDeviceObjects()
 
     // Destroy all textures
     for (ImTextureData* tex : ImGui::GetPlatformIO().Textures)
-        ImGui_ImplVulkan_DestroyTexture(tex);
+        if (tex->RefCount == 1)
+            ImGui_ImplVulkan_DestroyTexture(tex);
 
     if (bd->TexCommandBuffer)     { vkFreeCommandBuffers(v->Device, bd->TexCommandPool, 1, &bd->TexCommandBuffer); bd->TexCommandBuffer = VK_NULL_HANDLE; }
     if (bd->TexCommandPool)       { vkDestroyCommandPool(v->Device, bd->TexCommandPool, v->Allocator); bd->TexCommandPool = VK_NULL_HANDLE; }

@@ -585,10 +585,11 @@ void ImGui_ImplSDLGPU3_DestroyDeviceObjects()
 
     // Destroy all textures
     for (ImTextureData* tex : ImGui::GetPlatformIO().Textures)
-    {
-        tex->Status = ImTextureStatus_WantDestroy;
-        ImGui_ImplSDLGPU3_UpdateTexture(tex);
-    }
+        if (tex->RefCount == 1)
+        {
+            tex->Status = ImTextureStatus_WantDestroy;
+            ImGui_ImplSDLGPU3_UpdateTexture(tex);
+        }
     if (bd->VertexShader)   { SDL_ReleaseGPUShader(v->Device, bd->VertexShader); bd->VertexShader = nullptr;}
     if (bd->FragmentShader) { SDL_ReleaseGPUShader(v->Device, bd->FragmentShader); bd->FragmentShader = nullptr;}
     if (bd->TexSampler)     { SDL_ReleaseGPUSampler(v->Device, bd->TexSampler); bd->TexSampler = nullptr;}
