@@ -66,6 +66,7 @@
 //
 //       INCLUDE SECTION
 //
+namespace EDK3ImGui {
 
 #ifndef STB_INCLUDE_STB_RECT_PACK_H
 #define STB_INCLUDE_STB_RECT_PACK_H
@@ -625,3 +626,4 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 */
+}
