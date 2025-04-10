@@ -1,6 +1,7 @@
 #pragma once
 
 #include "imgui.h"
+#include "imgui_internal.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "backends/glfw/glfw3.h"
