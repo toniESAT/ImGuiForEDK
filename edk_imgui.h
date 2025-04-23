@@ -3,6 +3,8 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
+#include "EDK3/dev/glew.h" // Prevent "gl.h included before glew.h" error
+
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "backends/glfw/glfw3.h"
 #include "backends/glfw/glfw3native.h"
