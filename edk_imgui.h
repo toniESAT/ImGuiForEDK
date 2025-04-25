@@ -1,11 +1,16 @@
 #pragma once
 
+#include "EDK3/dev/glew.h"  // Prevent "gl.h included before glew.h" error
 #include "imgui.h"
 #include "imgui_internal.h"
 
-#include "EDK3/dev/glew.h" // Prevent "gl.h included before glew.h" error
+#ifndef GLFW_EXPOSE_NATIVE_WIN32
+#  define GLFW_EXPOSE_NATIVE_WIN32
+#endif
+#ifndef GLFW_EXPOSE_NATIVE_WGL
+#  define GLFW_EXPOSE_NATIVE_WGL
+#endif
 
-#define GLFW_EXPOSE_NATIVE_WIN32
 #include "backends/glfw/glfw3.h"
 #include "backends/glfw/glfw3native.h"
 #include "backends/imgui_impl_glfw.h"
