@@ -4001,3 +4001,6 @@ namespace ImGui
 
 inline void* operator new(size_t, EDK3ImGui::ImNewWrapper, void* ptr) { return ptr; }
 inline void  operator delete(void*, EDK3ImGui::ImNewWrapper, void*)   {} // This is only required so we can use the symmetrical new()
+
+using namespace EDK3ImGui;
+
